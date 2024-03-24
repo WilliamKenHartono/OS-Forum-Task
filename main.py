@@ -37,6 +37,7 @@ odd_numbers_file = 'odd.txt'
     
 def producer():
     global producer_finished
+    i=0
     for i in range(MAX_COUNT):
         num = rand.randint(LOWER_NUM, UPPER_NUM)
         with lock:
@@ -44,6 +45,9 @@ def producer():
                 buffer.append(num)
                 with open(all_numbers_file, 'a') as file:
                     file.write(f'{num}\n')
+            else:
+                i -= 1
+        print(i)
     producer_finished = True
 
 # CustomerEven's task
@@ -67,7 +71,6 @@ def customerOdd():
                     file.write(f'{oddNum}\n')
     
 # main
-
 producer_thread = threading.Thread(target=producer)
 customer_even_thread = threading.Thread(target=customerEven)
 customer_odd_thread = threading.Thread(target=customerOdd)
@@ -77,8 +80,8 @@ producer_thread.start()
 customer_even_thread.start()
 customer_odd_thread.start()
 
-customer_even_thread.join()
 producer_thread.join()
+customer_even_thread.join()
 customer_odd_thread.join()
 
 
