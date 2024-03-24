@@ -1,8 +1,6 @@
 import threading
 import random as rand
 import time
-import os
-from queue import LifoQueue
 
 # What code does:
 # Producer thread generates and stores random integers into an array that only stores 100 numbers.
@@ -23,88 +21,65 @@ UPPER_NUM = 10000
 BUFFER_SIZE = 100
 MAX_COUNT = 10000
 
-stack = []
+# Buffering
+buffer = []
+lock = threading.Lock()
+producer_finished = False
+start_time = time.time()
 
-# def reverse(lst):
-#     startIndex = 0
-#     endIndex = len(lst)-1
-
-#     while endIndex > startIndex:
-#             lst[startIndex], lst[endIndex] = lst[endIndex], lst[startIndex]
-#             startIndex = startIndex + 1
-#             endIndex = endIndex - 1
+# File Outputs
+all_numbers_file = 'all.txt'
+even_numbers_file = 'even.txt'
+odd_numbers_file = 'odd.txt'
 
 # Producer's task
 # Producer thread must write all the generated numbers to the output file all.txt.
+    
 def producer():
-    numList = []
+    global producer_finished
     for i in range(MAX_COUNT):
-        # time.sleep(1)
-        numAll = str(rand.randint(LOWER_NUM, UPPER_NUM))
-        numList.append(numAll)
+        num = rand.randint(LOWER_NUM, UPPER_NUM)
+        with lock:
+            if len(buffer) < BUFFER_SIZE:
+                buffer.append(num)
+                with open(all_numbers_file, 'a') as file:
+                    file.write(f'{num}\n')
+    producer_finished = True
 
-        if len(stack) <= BUFFER_SIZE:
-            stack.append(numAll)  
+# CustomerEven's task
+# removes only the odd numbers from the top of the buffer and writes them to the file called even.txt.
+def customerEven():
+    while not producer_finished or buffer:
+        with lock:
+            if buffer and buffer[-1] % 2 == 0:
+                evenNum = buffer.pop()
+                with open(even_numbers_file, 'a') as file:
+                    file.write(f'{evenNum}\n')
 
-    with open('all.txt', 'w') as f:
-        for j in numList:
-            f.write(j)
-            f.write('\n')
+# CustomerOdd's task
+# removes only the even numbers from the top of the buffer and writes them to the file called odd.txt.
+def customerOdd():
+    while not producer_finished or buffer:
+        with lock:
+            if buffer and buffer[-1] % 2 != 0:
+                oddNum = buffer.pop()
+                with open(odd_numbers_file, 'a') as file:
+                    file.write(f'{oddNum}\n')
     
-
-
-# Customer1's task
-# removes only the even numbers from the top of the buffer (stack) and writes them to the file called odd.txt.
-def customer1():
-    startIndex = 0
-    numOddList = []
-    # print(stack)
-    
-    while startIndex < len(stack)-1:
-        startIndex += 1
-        num = (-1*startIndex)
-        # Odd/Even filter
-        if int(stack[num]) % 2 == 0:
-            pass
-        else:
-            numOddList.append(stack[num])
-    
-    # print(numOddList)
-    # for i in range(len(stack)-1, -1, -1):
-    #     print (stack[i])
-    
-    with open('odd.txt', 'w') as f:
-        for j in numOddList:
-            f.write(j)
-            f.write('\n')
-        
-
-# Customer2's task
-# removes only the odd numbers from the top of the buffer (stack) and writes them to the file called even.txt.
-def customer2():
-    startIndex = 0
-    numEvenList = []
-    # print(stack)
-    
-    while startIndex < len(stack)-1:
-        startIndex += 1
-        num = (-1*startIndex)
-        # Odd/Even filter
-        if int(stack[num]) % 2 != 0:
-            pass
-        else:
-            numEvenList.append(stack[num])
-    
-    # print(numOddList)
-    # for i in range(len(stack)-1, -1, -1):
-    #     print (stack[i])
-    
-    with open('even.txt', 'w') as f:
-        for j in numEvenList:
-            f.write(j)
-            f.write('\n')
-
 # main
-producer()
-customer1()
-customer2()
+
+producer_thread = threading.Thread(target=producer)
+customer_even_thread = threading.Thread(target=customerEven)
+customer_odd_thread = threading.Thread(target=customerOdd)
+
+
+producer_thread.start()
+customer_even_thread.start()
+customer_odd_thread.start()
+
+customer_even_thread.join()
+producer_thread.join()
+customer_odd_thread.join()
+
+
+print("--- %s seconds ---" % (time.time() - start_time))
