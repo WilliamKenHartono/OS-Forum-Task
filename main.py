@@ -37,15 +37,13 @@ odd_numbers_file = 'odd.txt'
     
 def producer():
     global producer_finished
-    i=0
     for i in range(MAX_COUNT):
         num = rand.randint(LOWER_NUM, UPPER_NUM)
-        with lock:
-            if len(buffer) < BUFFER_SIZE:
-                buffer.append(num)
-                with open(all_numbers_file, 'a') as file:
-                    file.write(f'{num}\n')
-        time.sleep(0.000000000001)
+        if len(buffer) < BUFFER_SIZE:
+            buffer.append(num)
+            with open(all_numbers_file, 'a') as file:
+                file.write(f'{num}\n')
+        time.sleep(0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003)
     producer_finished = True
 
 # CustomerEven's task
