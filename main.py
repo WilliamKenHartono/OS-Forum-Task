@@ -45,7 +45,7 @@ def producer():
                 buffer.append(num)
                 with open(all_numbers_file, 'a') as file:
                     file.write(f'{num}\n')
-        time.sleep(0)
+        time.sleep(0.000000000001)
     producer_finished = True
 
 # CustomerEven's task
